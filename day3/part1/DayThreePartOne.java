@@ -1,101 +1,132 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 public class DayThreePartOne {
     public static void main(String[] args) throws FileNotFoundException {
-        File file = new File("/Users/alexstone/IdeaProjects/Advent-Of-Code-2023/day3/part1/example.txt");
+        File file = new File("C:\\Users\\Alex\\IdeaProjects\\Advent-Of-Code-2023\\day3\\part1\\input.txt");
         Scanner sc = new Scanner(file);
 
-        List<String> fileAsList = new ArrayList<>();
-        int rowSize = 0;
+
+        int rows = 140;
+        int columns = 140;
+        String[][] schematic = new String[rows][columns];
         while (sc.hasNextLine()) {
-            String line = sc.nextLine();
-            rowSize = line.length();
-            for (int i = 0; i < line.length(); ++i) {
-                fileAsList.add(String.valueOf(line.charAt(i)));
+            for (String[] strings : schematic) {
+                String[] line = sc.nextLine().trim().split("");
+                System.arraycopy(line, 0, strings, 0, line.length);
             }
         }
 
-        int partNumberSum = 0;
 
+        int totalPartNumbers = 0;
         int i = 0;
-        while (i < fileAsList.size()) {
+        while (i < rows) {
+            int j = 0;
+            while (j < columns) {
+                if (isNumber(schematic[i][j])) {
+                    int numberStart = j;
+                    int numberEnd = getNumberEnd(i, j, schematic);
+                    j = numberEnd + 1;
 
-            if (isNumber(fileAsList.get(i))) {
-                int startIndex = i;
-
-                int endIndex = i;
-                while (endIndex < fileAsList.size() - 1) {
-                    if (isNumber(fileAsList.get(endIndex + 1))) {
-                        ++endIndex;
-                    } else {
-                        if(isNumberValid(startIndex, endIndex, rowSize, fileAsList)) {
-                            System.out.println("Valid Number" + getNumberFound(startIndex, endIndex, fileAsList));
-                        }
-//                        System.out.println("Number Found: " + getNumberFound(startIndex, endIndex, fileAsList));
-                        i = endIndex + 1;
-                        break;
+                    if (isNumberValid(numberStart, numberEnd, i, schematic)) {
+                        String number = getNumber(i, numberStart, numberEnd, schematic);
+                        totalPartNumbers += Integer.parseInt(number);
                     }
-                }
-
-            } else {
-                ++i;
-            }
-        }
-
-    }
-
-    private static boolean isNumberValid(int startIndex, int endIndex, int rowSize, List<String> fileAsList) {
-        // Left
-        if (startIndex > 0) {
-            if (isSpecialSymbol(fileAsList.get(startIndex - 1))) {
-                return true;
-            }
-        }
-        // Right
-        if (startIndex != fileAsList.size() - 1) {
-            if (isSpecialSymbol(fileAsList.get(startIndex + 1))) {
-                return true;
-            }
-        }
-        // Above
-        int aboveStart = startIndex - rowSize - 1;
-        int aboveEnd = endIndex - rowSize + 1;
-
-        // Below
-        int belowStart = startIndex + 10 - 1;
-        int belowEnd = startIndex + 10 + 1;
-
-        int index = belowStart;
-        while(index <= belowEnd) {
-            if(index < fileAsList.size()) {
-                if (isSpecialSymbol(fileAsList.get(index))) {
-                    return true;
+                } else {
+                    ++j;
                 }
             }
-            ++index;
+            ++i;
         }
 
-        // Not valid
-        return false;
+        System.out.println("totalPartNumbers: " + totalPartNumbers);
     }
 
-    private static String getNumberFound(int startIndex, int endIndex, List<String> fileAsList) {
+    private static String getNumber(int i, int numberStart, int numberEnd, String[][] schematic) {
         String number = "";
-        for (int i = startIndex; i < endIndex + 1; ++i) {
-            number = number.concat(fileAsList.get(i));
+
+        int index = numberStart;
+        while(index <= numberEnd) {
+            number = number.concat(schematic[i][index]);
+            ++index;
         }
         return number;
     }
 
-    private static boolean isSpecialSymbol(String str) {
-        String nonSpecialSymbols = "123456789.";
+    private static int getNumberEnd(int i, int j, String[][] schematic) {
+        int numberEnd = j;
 
+        int index = j + 1;
+        while (index < schematic[0].length - 1) {
+            if (isNumber(schematic[i][index])) {
+                ++index;
+                ++numberEnd;
+            }
+            else {
+                break;
+            }
+        }
+        return numberEnd;
+    }
+
+    private static boolean isNumberValid(int numberStart, int numberEnd, int row, String[][] schematic) {
+        for (int i = numberStart; i <= numberEnd; ++i) {
+            // Left
+            if (i > 0) {
+                if (isSpecialSymbol(schematic[row][i - 1])) {
+                    return true;
+                }
+            }
+            // Right
+            if (i != schematic[row].length - 1) {
+                if (isSpecialSymbol(schematic[row][i + 1])) {
+                    return true;
+                }
+            }
+            // Above
+            if (row > 0) {
+                if (isSpecialSymbol(schematic[row - 1][i])) {
+                    return true;
+                }
+            }
+            // Below
+            if (row + 1 < schematic[0].length) {
+                if (isSpecialSymbol(schematic[row + 1][i])) {
+                    return true;
+                }
+            }
+            // Above right
+            if (row > 0 && i != schematic[row].length - 1) {
+                if (isSpecialSymbol(schematic[row - 1][i + 1])) {
+                    return true;
+                }
+            }
+            // Above left
+            if (row > 0 && i > 0) {
+                if (isSpecialSymbol(schematic[row - 1][i - 1])) {
+                    return true;
+                }
+            }
+            // Below right
+            if (row + 1 < schematic[0].length && i != schematic[row].length - 1) {
+                if (isSpecialSymbol(schematic[row + 1][i + 1])) {
+                    return true;
+                }
+            }
+            // Below left
+            if (row + 1 < schematic[0].length && i > 0) {
+                if (isSpecialSymbol(schematic[row + 1][i - 1])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean isSpecialSymbol(String str) {
+        String nonSpecialSymbols = "1234567890.";
         if (!nonSpecialSymbols.contains(str)) {
-            System.out.println("Special str: " + str);
             return true;
         } else {
             return false;
@@ -103,10 +134,9 @@ public class DayThreePartOne {
     }
 
     private static boolean isNumber(String str) {
-        String numbers = "123456789";
+        String numbers = "1234567890";
 
         if (numbers.contains(str)) {
-//            System.out.println("Number : " + str);
             return true;
         } else {
             return false;
